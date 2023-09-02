@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.jettrivia.model.QuestionItem
 
 @Composable
 fun TriviaHome(viewModel: TriviaViewModel = viewModel()) {
@@ -34,29 +35,44 @@ fun TriviaHome(viewModel: TriviaViewModel = viewModel()) {
 
     if (questions != null) {
         if (viewModel.currentIndex.value < questions.size) {
-            QuestionScreen(viewModel) {
-                // Check answer
-                viewModel.selectedChoiceIndex.value = null
-                viewModel.currentIndex.value++
-            }
+            val currentQuestion = questions[viewModel.currentIndex.value]
+            QuestionScreen(
+                currentIndex = viewModel.currentIndex.value,
+                currentQuestion = currentQuestion,
+                questionCount = questions.size,
+                selectedChoiceIndex = viewModel.selectedChoiceIndex.value,
+                onSelect = {
+                    viewModel.selectedChoiceIndex.value = it
+                },
+                onNext = {
+                    if (viewModel.selectedChoiceIndex.value == currentQuestion.correctChoiceIndex()) {
+                        viewModel.score.value++
+                    }
+                    Log.d("TriviaHome", viewModel.score.value.toString())
+
+                    viewModel.selectedChoiceIndex.value = null
+                    viewModel.currentIndex.value++
+                },
+            )
         } else {
-            // Result screen
+            Log.d("TriviaHome", viewModel.score.value.toString())
         }
     } else if (viewModel.data.value.loading == true) {
         CircularProgressIndicator()
-    } else {
-        Log.d("TriviaHome", viewModel.data.value.e?.localizedMessage ?: "Unexpected error")
+    } else if (viewModel.data.value.e != null) {
+        Log.d("TriviaHome", viewModel.data.value.e!!.localizedMessage)
     }
 }
 
 @Composable
 fun QuestionScreen(
-    viewModel: TriviaViewModel,
+    currentIndex: Int,
+    currentQuestion: QuestionItem,
+    questionCount: Int,
+    selectedChoiceIndex: Int?,
+    onSelect: (Int) -> Unit,
     onNext: () -> Unit,
 ) {
-    val questions = viewModel.data.value.data!!
-    val currentQuestion = questions[viewModel.currentIndex.value]
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,7 +80,7 @@ fun QuestionScreen(
         horizontalAlignment = Alignment.Start,
     ) {
         Text(
-            text = "Question ${viewModel.currentIndex.value + 1}/${questions.size}",
+            text = "Question ${currentIndex + 1}/$questionCount",
         )
         Spacer(modifier = Modifier.height(16.dp))
         Divider()
@@ -79,14 +95,16 @@ fun QuestionScreen(
             items(count = currentQuestion.choices.size) {
                 AnswerChoice(
                     text = currentQuestion.choices[it],
-                    selected = viewModel.selectedChoiceIndex.value == it,
+                    selected = selectedChoiceIndex == it,
                 ) {
-                    viewModel.selectedChoiceIndex.value = it
+                    onSelect(it)
                 }
             }
         }
         Box(
-            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
             contentAlignment = Alignment.Center,
         ) {
             Button(
@@ -94,7 +112,7 @@ fun QuestionScreen(
                 shape = CircleShape,
             ) {
                 Text(
-                    if (viewModel.currentIndex.value < questions.size) {
+                    if (currentIndex < questionCount) {
                         "Next"
                     } else {
                         "Show result"

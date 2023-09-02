@@ -5,4 +5,6 @@ data class QuestionItem(
     val category: String,
     val choices: List<String>,
     val question: String,
-)
+) {
+    fun correctChoiceIndex(): Int = choices.indexOf(answer)
+}

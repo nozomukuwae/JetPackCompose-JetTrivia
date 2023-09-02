@@ -18,6 +18,7 @@ class TriviaViewModel @Inject constructor(private val questionRepository: Questi
         mutableStateOf(DataOrException<Question, Boolean, Exception>())
     val currentIndex = mutableStateOf(0)
     val selectedChoiceIndex = mutableStateOf<Int?>(null)
+    val score = mutableStateOf(0)
 
     init {
         fetchAllQuestions()
