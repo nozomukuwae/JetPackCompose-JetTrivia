@@ -16,12 +16,14 @@ class TriviaViewModel @Inject constructor(private val questionRepository: Questi
     ViewModel() {
     val data: MutableState<DataOrException<Question, Boolean, Exception>> =
         mutableStateOf(DataOrException<Question, Boolean, Exception>())
+    val currentIndex = mutableStateOf(0)
+    val selectedChoiceIndex = mutableStateOf<Int?>(null)
 
     init {
-        fetchAllQuestion()
+        fetchAllQuestions()
     }
 
-    fun fetchAllQuestion() {
+    private fun fetchAllQuestions() {
         viewModelScope.launch {
             data.value = questionRepository.getAllQuestions()
         }
